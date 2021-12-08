@@ -4,6 +4,7 @@
 
 # Load libraries
 library(mosaic) # For EDA
+library(data.table) # For frequency approximation
 library(NSM3) # For Durbin-Skillings-Mack
 library(mice) # For MICE procedure
 library(Kendall) # For Mann-Kendall
@@ -22,9 +23,9 @@ nfl <- nfl[, c("game_id"
                , "passing_yards"
                , "return_yards"
                , "air_yards")]
-nfl$max_yards <- pmax(nfl$kick_distance, nfl$passing_yards, nfl$return_yards, nfl$air_yards, na.rm = TRUE)
 mousey <- mice(nfl)
 nfl <- complete(mousey)
+nfl$max_yards <- pmax(nfl$kick_distance, nfl$passing_yards, nfl$return_yards, nfl$air_yards, na.rm = TRUE)
 View(nfl)
 
 # EDA
@@ -42,4 +43,20 @@ pMackSkil(nfl$max_yards, nfl$stadium_id, nfl$game_id)
 ## Blocks: Game (game_id)
 ## Treatments Stadiums (stadium_id)
 pDurSkiMa(nfl$max_yards, b = nfl$game_id, trt = nfl$stadium_id, method = "Monte Carlo", n.mc = 1000)
-# 
+
+# Kendall Time Series Procedure
+keys <- nfl$game_id
+counts <- data.frame(table(keys))
+counts <- data.frame(counts)
+favstats(counts$Freq) # to find an average frequency of 97
+# because there are so many obs, we can take this frequency to be roughly averaged
+TS = ts(nfl$max_yards, frequency = 97, start = 2010, end = 2020)
+TS
+plot(TS)
+plot(decompose(TS))
+plot(stl(TS, s.window="periodic"))
+MK = MannKendall(TS)
+summary(MK)
+
+# Sen's slope for time series data
+sens.slope(TS)
