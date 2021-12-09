@@ -39,9 +39,9 @@ favstats(counts$Freq) # to find an average frequency of 97
 # because there are so many obs, we can take this frequency to be roughly averaged
 TS = ts(nfl$yards, frequency = 97, start = 2010, end = 2020)
 TS
-plot(TS)
+plot(TS, main="Time Series of Distances")
 plot(decompose(TS))
-plot(stl(TS, s.window="periodic"))
+plot(stl(TS, s.window="periodic"), main = "Remainder, Trends, and Seasonality")
 MK = MannKendall(TS)
 summary(MK)
 
