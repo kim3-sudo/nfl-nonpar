@@ -9,12 +9,14 @@ Created on Thu Dec  9 16:36:04 2021
 import pandas as pd
 from tqdm import tqdm
 
-def yardsum(team, stadium, dataframe):
+def yardsum(game, team, stadium, dataframe):
     """
     Sum yards for a team by stadium
 
     Parameters
     ----------
+    game :string
+        The game id in the YYYY_MM-HOM_AWA form
     team : string
         The two or three letter team string code
     stadium : string
@@ -30,7 +32,7 @@ def yardsum(team, stadium, dataframe):
     """
     yardsum = 0
     for index, row in tqdm(dataframe.iterrows(), desc = team + ' at ' + stadium):
-        if (row.get("posteam") == team and row.get("stadium_id") == stadium):
+        if (row.get("posteam") == team and row.get("stadium_id") == stadium and row.get("game_id") == game):
             yardsum = yardsum + int(row.get("yards"))
     return yardsum
 
@@ -65,28 +67,66 @@ def narow(team, dataframe):
          #   break
     return nothere
 
+def getgames(dataframe):
+    """
+    Generate a list of games from the dataframe
+
+    Parameters
+    ----------
+    dataframe : Pandas dataframe
+        A dataframe to get games from.
+
+    Returns
+    -------
+    games : list of strings
+        A list of games .
+
+    """
+    games = []
+    games.append("2010_01_ARI_STL")
+    games.append("2010_01_ATL_PIT")
+    for index, row in tqdm(dataframe.iterrows()):
+        gameid = str(row["game_id"]).strip().upper()
+        if gameid in games:
+            pass
+        else:
+            games.append(gameid)
+    return games
+
 df = pd.read_csv("~/Documents/nfl-nonpar/data/nfl.csv")
 df['posteam'] = df['posteam'].astype('str')
 
-blocked = pd.DataFrame(columns = ["ATL00", "ATL97", "BAL00", "BOS00", "BUF00", "BUF01", "CAR00", "CHI98", "CIN00", "CLE00", "DAL00", "DEN00", "DET00", "GNB00", "HOU00", "IND00", "JAX00", "KAN00", "LAX01", "LAX97", "LAX99", "LON00", "LON01", "LON02", "MEX00", "MIA00", "MIN00", "MIN01", "MIN98", "NAS00","NOR00", "NYC01", "OAK00", "PHI00", "PHO00", "PIT00", "SDG00", "SEA00", "SFO00", "SFO01", "STL00", "TAM00", "VEG00", "WAS00"])
+blocked = pd.DataFrame(columns = ["yards", "stadium"])
 
 teams = ["ARI", "ATL", "BAL", "BUF", "CAR", "CHI", "CIN", "CLE", "DAL", "DEN", "DET", "GB", "HOU", "IND", "JAX", "KC", "LA", "LAC", "LV", "MIA", "MIN", "NE", "NO", "NYG", "NYJ", "PHI", "PIT", "SEA", "SF", "TB", "TEN", "WAS"]
 stadiums = ["ATL00", "ATL97", "BAL00", "BOS00", "BUF00", "BUF01", "CAR00", "CHI98", "CIN00", "CLE00", "DAL00", "DEN00", "DET00", "GNB00", "HOU00", "IND00", "JAX00", "KAN00", "LAX01", "LAX97", "LAX99", "LON00", "LON01", "LON02", "MEX00", "MIA00", "MIN00", "MIN01", "MIN98", "NAS00","NOR00", "NYC01", "OAK00", "PHI00", "PHO00", "PIT00", "SDG00", "SEA00", "SFO00", "SFO01", "STL00", "TAM00", "VEG00", "WAS00"]
+games = getgames(df)
 
-blocked.reindex(teams)
+#blocked.reindex(games)
 
 for team in teams:
     print("Processing:", team)
     yardage = pd.Series(dtype=int)
+    gamelist = pd.Series(dtype=str)
+    stadiumlist = pd.Series(dtype=str)
     tempdf = df
     print("Calculating not applicable rows to remove")
     tempdf = tempdf.drop(narow(team, dataframe = tempdf))
     print("Removed NA rows", sep="")
     for stadium in stadiums:
-        yards = yardsum(team = team, stadium = stadium, dataframe = tempdf)
-        print("Got " + str(yards) + " yards")
-        yardage = yardage.append(pd.Series([yards]))
+        for game in games:
+            yards = yardsum(game = game, team = team, stadium = stadium, dataframe = tempdf)
+            if (yards != 0):
+                print("\nGot " + str(yards) + " yards for " + game + " at " + stadium)
+                yardage = yardage.append(pd.Series([yards]))
+                gamelist = gamelist.append(pd.Series([game]))
+                stadiumlist = stadiumlist.append(pd.Series([stadium]))
+    gamelist = gamelist.tolist()
+    blocked[games] = gamelist
+    blocked.reindex(games)
     yardage = yardage.tolist()
-    blocked.loc[team] = yardage
+    blocked[yards] = yardage
+    stadiumlist = stadiumlist.tolist()
+    blocked[stadium] = stadiumlist
 
 blocked.to_csv("~/Documents/nfl-nonpar/data/blocked.csv")
