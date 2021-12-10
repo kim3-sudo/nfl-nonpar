@@ -21,6 +21,7 @@ nfl <- nfl[, c("game_id"
                , "stadium_id"
                , "home_team"
                , "away_team"
+               , "posteam"
                , "play_type"
                , "kick_distance"
                , "passing_yards"
@@ -53,44 +54,7 @@ sens.slope(TS)
 # treatments (across): stadium_id
 # groups (down): teams
 # response (cell): total yards gained in that stadium
-blocked <- data.frame("team", "ATL00", "ATL97", "BAL00", "BOS00", "BUF00", "BUF01", "CAR00", "CHI98", "CIN00", "CLE00", "DAL00", "DEN00", "DET00", "GNB00", "HOU00", "IND00", "JAX00", "KAN00", "LAX01", "LAX97", "LAX99", "LON00", "LON01", "LON02", "MEX00", "MIA00", "MIN00", "MIN01", "MIN98", "NAS00","NOR00", "NYC01", "OAK00", "PHI00", "PHO00", "PIT00", "SDG00", "SEA00", "SFO00", "SFO01", "STL00", "TAM00", "VEG00", "WAS00")
-yardsum <- function(team, stadium) {
-  sum = 0
-  pb <- progress_bar$new(total = nrow(nfl), format = paste("[:bar]:percent", team, "at", stadium, "overall progress"))
-  for (row in 1:nrow(nfl)) {
-    pb$tick()
-    home_team <- nfl[row, "home_team"]
-    yards <- nfl[row, "yards"]
-    if (home_team == team) {
-      sum = sum + yards
-    } else {
-      sum = sum
-    }
-  }
-  return(sum)
-}
-
-teams <- c("ARI", "ATL", "BAL", "BUF", "CAR", "CHI", "CIN", "CLE", "DAL", "DEN", "DET", "GB", "HOU", "IND", "JAX", "KC", "LA", "LAC", "LV", "MIA", "MIN", "NE", "NO", "NYG", "NYJ", "PHI", "PIT", "SEA", "SF", "TB", "TEN", "WAS")
-stadiums <- c("ATL00", "ATL97", "BAL00", "BOS00", "BUF00", "BUF01", "CAR00", "CHI98", "CIN00", "CLE00", "DAL00", "DEN00", "DET00", "GNB00", "HOU00", "IND00", "JAX00", "KAN00", "LAX01", "LAX97", "LAX99", "LON00", "LON01", "LON02", "MEX00", "MIA00", "MIN00", "MIN01", "MIN98", "NAS00","NOR00", "NYC01", "OAK00", "PHI00", "PHO00", "PIT00", "SDG00", "SEA00", "SFO00", "SFO01", "STL00", "TAM00", "VEG00", "WAS00")
-yardsum(team = "ARI", stadium = "ATL00")
-
-totalcells = 0
-for (team in teams) {
-  for (stadium in stadiums) {
-    totalcells = totalcells + 1
-  }
-}
-pb1 <- progress_bar$new(total = totalcells, format = "[:bar]:percent Overall Progress")
-for (team in teams) {
-  yardage = c()
-  for (stadium in stadiums) {
-    pb1$tick()
-    append(yardage, yardsum(team = team, stadium = stadium))
-  }
-  append(team, yardage, after = 0)
-  newdf <- data.frame(t(yardage))
-  blocked <- rbind(blocked, newdf)
-}
+blocked <- read.csv(url())
 
 # EDA
 
