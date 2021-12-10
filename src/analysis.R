@@ -54,7 +54,7 @@ sens.slope(TS)
 # treatments (across): stadium_id
 # groups (down): teams
 # response (cell): total yards gained in that stadium
-blocked <- read.csv(url())
+blocked <- read.csv(url("https://raw.githubusercontent.com/kim3-sudo/nfl-nonpar/main/data/blocked.csv"))
 
 # EDA
 
@@ -63,13 +63,11 @@ blocked <- read.csv(url())
 ## Response: Distance (*_yards)
 ## Blocks: Game (game_id)
 ## Treatments: Stadiums (stadium_id)
-nfl$stadium_id <- factor(nfl$stadium_id)
-nfl$game_id <- factor(nfl$game_id)
-friedman.test(nfl$yards, nfl$stadium_id, nfl$game_id)
+friedman.test(blocked$X, groups = blocked$ATL00, blocks = blocked$ATL97)
 
 # Durbin-Skillings-Mack Procedure
 ## Distribution-Free Test for General Alternatives in a Randomized Balanced Incomplete Block Design
 ## Response: Distance (*_yards)
 ## Blocks: Game (game_id)
 ## Treatments Stadiums (stadium_id)
-pDurSkiMa(nfl$yards, b = nfl$game_id, trt = nfl$stadium_id, method = "Monte Carlo", n.mc = 10000)
+pDurSkiMa(blocked$ATL00, b = blocked$X, trt =  method = "Monte Carlo", n.mc = 10000)

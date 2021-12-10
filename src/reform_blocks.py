@@ -73,7 +73,6 @@ blocked = pd.DataFrame(columns = ["ATL00", "ATL97", "BAL00", "BOS00", "BUF00", "
 teams = ["ARI", "ATL", "BAL", "BUF", "CAR", "CHI", "CIN", "CLE", "DAL", "DEN", "DET", "GB", "HOU", "IND", "JAX", "KC", "LA", "LAC", "LV", "MIA", "MIN", "NE", "NO", "NYG", "NYJ", "PHI", "PIT", "SEA", "SF", "TB", "TEN", "WAS"]
 stadiums = ["ATL00", "ATL97", "BAL00", "BOS00", "BUF00", "BUF01", "CAR00", "CHI98", "CIN00", "CLE00", "DAL00", "DEN00", "DET00", "GNB00", "HOU00", "IND00", "JAX00", "KAN00", "LAX01", "LAX97", "LAX99", "LON00", "LON01", "LON02", "MEX00", "MIA00", "MIN00", "MIN01", "MIN98", "NAS00","NOR00", "NYC01", "OAK00", "PHI00", "PHO00", "PIT00", "SDG00", "SEA00", "SFO00", "SFO01", "STL00", "TAM00", "VEG00", "WAS00"]
 
-blocked['team'] = teams
 blocked.reindex(teams)
 
 for team in teams:
@@ -89,3 +88,5 @@ for team in teams:
         yardage = yardage.append(pd.Series([yards]))
     yardage = yardage.tolist()
     blocked.loc[team] = yardage
+
+blocked.to_csv("~/Documents/nfl-nonpar/data/blocked.csv")
