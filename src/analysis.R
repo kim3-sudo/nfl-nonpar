@@ -10,6 +10,7 @@ library(mice) # For MICE procedure
 library(Kendall) # For Mann-Kendall
 library(trend) # For Sen's slope
 library(FSA) # For Dunn's Test
+library(PMCMRplus) # For Dwass, Steel, Critchlow-Fligner Test
 
 # Make a new blocked dataframe
 # treatments (across): stadium_id
@@ -27,12 +28,14 @@ kruskal.test(blocked$yards, g = blocked$posteam)
 # Dwass, Steel, Critchlow-Fligner Test
 dscfAllPairsTest(blocked$yards, g=as.factor(blocked$stadium))
 # Dunn's Test with Bonferroni correction
-dunnTest(yards~stadium, data = blocked, method = "bonferroni")
+dunnstadium <- dunnTest(yards~stadium, data = blocked, method = "bonferroni")
+View(dunnstadium[["res"]])
 
 # Teams Multiple Comparisons
 dscfAllPairsTest(blocked$yards, g=as.factor(blocked$posteam))
 # Dunn's Test with Bonferroni correction
-dunnTest(yards~posteam, data = blocked, method = "bonferroni")
+dunnposteam <- dunnTest(yards~posteam, data = blocked, method = "bonferroni")
+View(dunnposteam[["res"]])
 
 # Load data
 data <- readRDS(url('https://github.com/kim3-sudo/nfl_analysis_data/blob/main/nflfastr_pbp_2010_to_2020.rds?raw=true'))
