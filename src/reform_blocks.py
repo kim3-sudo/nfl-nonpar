@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu Dec  9 16:36:04 2021
+Created on Sun Dec 12 16:56:40 2021
 
 @author: kim3
 """
@@ -9,124 +9,25 @@ Created on Thu Dec  9 16:36:04 2021
 import pandas as pd
 from tqdm import tqdm
 
-def yardsum(game, team, stadium, dataframe):
-    """
-    Sum yards for a team by stadium
-
-    Parameters
-    ----------
-    game :string
-        The game id in the YYYY_MM-HOM_AWA form
-    team : string
-        The two or three letter team string code
-    stadium : string
-        The stadium ID four, five, or six character code.
-    dataframe : Pandas dataframe
-        A dataframe to sum yards by (if you want to use temp DFs)
-
-    Returns
-    -------
-    sum : int
-        Sum of yards by that team in that stadium
-
-    """
-    yardsum = 0
-    for index, row in tqdm(dataframe.iterrows(), desc = team + ' at ' + stadium):
-        if (row.get("posteam") == team and row.get("stadium_id") == stadium and row.get("game_id") == game):
-            yardsum = yardsum + int(row.get("yards"))
-    return yardsum
-
-def narow(team, dataframe):
-    """
-    Generate a list of indices to remove from dataframe
-
-    Parameters
-    ----------
-    team : string
-        The team to check (home/away)
-
-    Returns
-    -------
-    nothere : list of integers
-        The rows that you can remove.
-
-    """
-    nothere = []
-    current = 0
-    for index, row in tqdm(dataframe.iterrows()):
-        # if they're not the home team or the away team
-        home = str(row["home_team"]).strip().upper()
-        away = str(row["away_team"]).strip().upper()
-        team = team.strip().upper()
-        #print(home, away, team)
-        if ((home != team and away != team) == True):
-            #print(home != team or away != team)
-            nothere.append(current)
-        current += 1
-        #if current > 150:
-         #   break
-    return nothere
-
-def getgames(dataframe):
-    """
-    Generate a list of games from the dataframe
-
-    Parameters
-    ----------
-    dataframe : Pandas dataframe
-        A dataframe to get games from.
-
-    Returns
-    -------
-    games : list of strings
-        A list of games .
-
-    """
-    games = []
-    games.append("2010_01_ARI_STL")
-    games.append("2010_01_ATL_PIT")
-    for index, row in tqdm(dataframe.iterrows()):
-        gameid = str(row["game_id"]).strip().upper()
-        if gameid in games:
-            pass
-        else:
-            games.append(gameid)
-    return games
-
 df = pd.read_csv("~/Documents/nfl-nonpar/data/nfl.csv")
 df['posteam'] = df['posteam'].astype('str')
 
-blocked = pd.DataFrame(columns = ["yards", "stadium"])
+blocked = pd.DataFrame({"game": pd.Series(dtype='str'), "posteam": pd.Series(dtype='str'), "yards": pd.Series(dtype='int'), "stadium": pd.Series(dtype='str')})
 
-teams = ["ARI", "ATL", "BAL", "BUF", "CAR", "CHI", "CIN", "CLE", "DAL", "DEN", "DET", "GB", "HOU", "IND", "JAX", "KC", "LA", "LAC", "LV", "MIA", "MIN", "NE", "NO", "NYG", "NYJ", "PHI", "PIT", "SEA", "SF", "TB", "TEN", "WAS"]
-stadiums = ["ATL00", "ATL97", "BAL00", "BOS00", "BUF00", "BUF01", "CAR00", "CHI98", "CIN00", "CLE00", "DAL00", "DEN00", "DET00", "GNB00", "HOU00", "IND00", "JAX00", "KAN00", "LAX01", "LAX97", "LAX99", "LON00", "LON01", "LON02", "MEX00", "MIA00", "MIN00", "MIN01", "MIN98", "NAS00","NOR00", "NYC01", "OAK00", "PHI00", "PHO00", "PIT00", "SDG00", "SEA00", "SFO00", "SFO01", "STL00", "TAM00", "VEG00", "WAS00"]
-games = getgames(df)
-
-#blocked.reindex(games)
-
-for team in teams:
-    print("Processing:", team)
-    yardage = pd.Series(dtype=int)
-    gamelist = pd.Series(dtype=str)
-    stadiumlist = pd.Series(dtype=str)
-    tempdf = df
-    print("Calculating not applicable rows to remove")
-    tempdf = tempdf.drop(narow(team, dataframe = tempdf))
-    print("Removed NA rows", sep="")
-    for stadium in stadiums:
-        for game in games:
-            yards = yardsum(game = game, team = team, stadium = stadium, dataframe = tempdf)
-            if (yards != 0):
-                print("\nGot " + str(yards) + " yards for " + game + " at " + stadium)
-                yardage = yardage.append(pd.Series([yards]))
-                gamelist = gamelist.append(pd.Series([game]))
-                stadiumlist = stadiumlist.append(pd.Series([stadium]))
-    gamelist = gamelist.tolist()
-    blocked[games] = gamelist
-    blocked.reindex(games)
-    yardage = yardage.tolist()
-    blocked[yards] = yardage
-    stadiumlist = stadiumlist.tolist()
-    blocked[stadium] = stadiumlist
-
-blocked.to_csv("~/Documents/nfl-nonpar/data/blocked.csv")
+for index in tqdm(range(len(df))):
+    game_id = str(df.iloc[index, 1]).strip().upper() # game_id
+    yards = int(df.iloc[index, 11]) # yards
+    posteam = str(df.iloc[index, 5]).strip().upper() # posteam
+    #if game_id not in blocked.values:
+    if ((blocked['game'] == game_id) & (blocked['posteam'] == posteam)).any() == False:
+        # add game_id to blocked
+        stadium = str(df.iloc[index, 2]).strip().upper() # stadium_id
+        s = [game_id, posteam, yards, stadium]
+        blocked.loc[len(blocked)] = s
+        #blocked = blocked.append(s, ignore_index = True)
+    else:
+        # get location of match
+        loc = blocked[(blocked['game'] == game_id) & (blocked['posteam'] == posteam)].index[0] #blocked.index[((blocked['game'] == game_id) & (blocked['posteam'] == posteam)).all().all()]
+        # edit game_id in blocked at location
+        blocked.at[loc, 'yards'] = int(blocked.at[loc, 'yards']) + int(df.iloc[index, 11]) # yards
+        
