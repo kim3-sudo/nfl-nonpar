@@ -3,14 +3,36 @@
 ### STAT 216 F21 @ Kenyon College
 
 # Load libraries
+library(dplyr) # For data filtering
 library(mosaic) # For EDA
 library(data.table) # For frequency approximation
-library(NSM3) # For Durbin-Skillings-Mack
 library(mice) # For MICE procedure
 library(Kendall) # For Mann-Kendall
 library(trend) # For Sen's slope
-library(PMCMRplus) # For Skillings-Mack rank sum test for partially balacned incomplete block designs
-library(progress) # For dataframe building
+library(FSA) # For Dunn's Test
+
+# Make a new blocked dataframe
+# treatments (across): stadium_id
+# groups (down): teams
+# response (cell): total yards gained in that stadium
+blocked <- read.csv(url("https://raw.githubusercontent.com/kim3-sudo/nfl-nonpar/main/data/blocked.csv"))
+
+# Test differences between stadiums by yards
+kruskal.test(blocked$yards, g = blocked$stadium)
+
+# Test differences between teams by yards
+kruskal.test(blocked$yards, g = blocked$posteam)
+
+# Stadiums Multiple Comparisons
+# Dwass, Steel, Critchlow-Fligner Test
+dscfAllPairsTest(blocked$yards, g=as.factor(blocked$stadium))
+# Dunn's Test with Bonferroni correction
+dunnTest(yards~stadium, data = blocked, method = "bonferroni")
+
+# Teams Multiple Comparisons
+dscfAllPairsTest(blocked$yards, g=as.factor(blocked$posteam))
+# Dunn's Test with Bonferroni correction
+dunnTest(yards~posteam, data = blocked, method = "bonferroni")
 
 # Load data
 data <- readRDS(url('https://github.com/kim3-sudo/nfl_analysis_data/blob/main/nflfastr_pbp_2010_to_2020.rds?raw=true'))
@@ -49,25 +71,3 @@ summary(MK)
 # Sen's slope for time series data
 sens.slope(TS)
 
-## Based on the time series analyses (not significant for everything), there's no reason for us to not just clump everything together
-# Make a new blocked dataframe
-# treatments (across): stadium_id
-# groups (down): teams
-# response (cell): total yards gained in that stadium
-blocked <- read.csv(url("https://raw.githubusercontent.com/kim3-sudo/nfl-nonpar/main/data/blocked.csv"))
-
-# EDA
-
-# Friedman Procedure
-## Distribution-Free Test for General Alternatives in a Randomized Block Design
-## Response: Distance (*_yards)
-## Blocks: Game (game_id)
-## Treatments: Stadiums (stadium_id)
-friedman.test(blocked$X, groups = blocked$ATL00, blocks = blocked$ATL97)
-
-# Durbin-Skillings-Mack Procedure
-## Distribution-Free Test for General Alternatives in a Randomized Balanced Incomplete Block Design
-## Response: Distance (*_yards)
-## Blocks: Game (game_id)
-## Treatments Stadiums (stadium_id)
-pDurSkiMa(blocked$ATL00, b = blocked$X, trt =  method = "Monte Carlo", n.mc = 10000)
